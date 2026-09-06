@@ -7,16 +7,18 @@ int tick;
 
 void main(void)
 {
-	videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE);
-	vramSetBankC(VRAM_C_SUB_BG);
-	PrintConsole bs;
-	consoleInit(&bs, 0, BgType_Text4bpp, BgSize_T_256x256, 31, 0, false, true);
-
 	videoSetMode(MODE_FB0);
 	vramSetBankA(VRAM_A_LCD);
 
-	for (int i = 0; i < vga_len; i++)
-		vga[i] = RGB15(5, 5, 5);
+	videoSetModeSub(MODE_5_2D);
+	vramSetBankB(VRAM_B_LCD);
+
+	lcdMainOnBottom();
+
+	for (int i = 0; i < vga_len; i++) {
+		vga[i] = 0;
+		VRAM_B[i] = 0;
+	}
 
 	srand(time(NULL));
 

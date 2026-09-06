@@ -10,9 +10,11 @@
 const int LEN = W * H;
 
 const int CW = SCREEN_WIDTH / W;
-const int CH = SCREEN_WIDTH / H;
+const int CH = SCREEN_HEIGHT / H;
 
 bool grid[W * H];
+
+static bool paused = false;
 
 static void
 fill(col_t *begin)
@@ -28,6 +30,37 @@ fill(col_t *begin)
 	}
 }
 
+static void
+handle_input(void)
+{
+	static Keypad kp;
+	static bool touch_was_down;
+
+	keypadRead(&kp);
+
+	u16 down = keypadDown(&kp);
+
+	if (down & KEY_A)
+		paused = !paused;
+	if (down & KEY_START)
+		setup();
+	if (down & KEY_SELECT)
+		memset(grid, 0, sizeof grid);
+
+	TouchData t;
+	bool touched = touchRead(&t);
+
+	if (touched && !touch_was_down) {
+		int cx = t.px / CW;
+		int cy = t.py / CH;
+
+		if (cx < W && cy < H)
+			grid[cx + cy * W] ^= 1;
+	}
+
+	touch_was_down = touched;
+}
+
 void setup(void)
 {
 	for (int i = 0; i < LEN; i++)
@@ -36,6 +69,8 @@ void setup(void)
 
 void loop(void)
 {
+	handle_input();
+
 	for (int i = 0; i < vga_len; i++)
 		vga[i] = 0;
 
@@ -43,6 +78,9 @@ void loop(void)
 		for (int i = 0; i < W; i++)
 			if (grid[i + j * W])
 				fill(&vga[j * CH * SCREEN_WIDTH + i * CW]);
+
+	if (paused)
+		return;
 
 	if (tick % TICK_SPEED != 0)
 		return;
